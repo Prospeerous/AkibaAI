@@ -1,0 +1,54 @@
+# Environment Variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Data directories (large files, don't commit)
+data/raw/
+data/processed/
+data/indices/
+
+# Keep data directory structure but ignore contents
+!data/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/indices/.gitkeep
+
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Windows artifacts
+nul
+
+# Large binary files
+*.docx

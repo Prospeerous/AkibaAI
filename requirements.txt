@@ -1,0 +1,52 @@
+# Kenya Financial Intelligence RAG System — Dependencies
+# =====================================================
+
+# ── LangChain Framework ──────────────────────────────────────────────
+langchain>=0.1.10
+langchain-community>=0.0.20
+langchain-huggingface>=0.0.3
+langchain-ollama>=0.1.0
+
+# ── Embedding Models (FREE, local) ──────────────────────────────────
+sentence-transformers>=2.2.0
+torch>=2.0.0
+
+# ── Vector Store ─────────────────────────────────────────────────────
+faiss-cpu>=1.8.0
+
+# ── PDF Processing ───────────────────────────────────────────────────
+pymupdf>=1.23.0
+
+# ── Web Scraping ─────────────────────────────────────────────────────
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+lxml>=5.1.0
+
+# ── JavaScript Rendering (Phase 3c) ──────────────────────────────────
+# Install browser: playwright install chromium
+playwright>=1.40.0
+
+# ── Podcast / YouTube Transcripts (Phase 3d) ─────────────────────────
+youtube-transcript-api>=0.6.0
+yt-dlp>=2024.1.0
+
+# ── Near-duplicate Detection ──────────────────────────────────────────
+datasketch>=1.5.0
+
+# ── Environment & Configuration ──────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Data Processing ──────────────────────────────────────────────────
+numpy>=1.24.0
+pandas>=2.0.0
+
+# ── Scheduling (optional — for automated refresh) ───────────────────
+apscheduler>=3.10.0
+
+# ── OpenAI (optional — only if using paid API) ──────────────────────
+# openai>=1.12.0
+# langchain-openai>=0.0.8
+
+# ── Development (optional) ──────────────────────────────────────────
+# jupyter>=1.0.0
+# ipykernel>=6.29.0
