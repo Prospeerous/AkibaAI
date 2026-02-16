@@ -2,6 +2,19 @@
 Central configuration for the Kenya Financial Intelligence pipeline.
 
 All tunables live here. Environment variables override defaults via .env.
+
+LLM backend selection
+---------------------
+Set LLM_BACKEND in your environment or .env file:
+
+  LLM_BACKEND=ollama          (default — local Ollama, works offline)
+  LLM_BACKEND=gemini          (Google Gemini API — good for Kaggle)
+  LLM_BACKEND=huggingface     (HuggingFace Inference API)
+
+Backend-specific variables:
+  Ollama:       OLLAMA_MODEL, OLLAMA_BASE_URL
+  Gemini:       GEMINI_API_KEY, GEMINI_MODEL
+  HuggingFace:  HF_API_TOKEN, HF_MODEL
 """
 
 import os
@@ -80,9 +93,21 @@ class Settings:
     news_max_articles: int = 200
     news_max_age_days: int = 90     # Only scrape articles < N days old
 
+    # ── LLM Backend ────────────────────────────────────────────────────────
+    # Which LLM to use: "ollama" | "gemini" | "huggingface"
+    llm_backend: str = os.getenv("LLM_BACKEND", "ollama").lower()
+
     # ── Ollama ─────────────────────────────────────────────────────────────
     ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3:8b-instruct-q4_K_M")
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+
+    # ── Gemini ─────────────────────────────────────────────────────────────
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+
+    # ── HuggingFace Inference API ───────────────────────────────────────────
+    hf_api_token: str = os.getenv("HF_API_TOKEN", "")
+    hf_model: str = os.getenv("HF_MODEL", "mistralai/Mistral-7B-Instruct-v0.2")
 
     # ── Scheduling ─────────────────────────────────────────────────────────
     full_refresh_cron: str = "0 2 * * 0"      # Every Sunday 2 AM
@@ -106,3 +131,56 @@ class Settings:
         p = self.processed_dir / source_id
         p.mkdir(parents=True, exist_ok=True)
         return p
+
+    def get_llm(self):
+        """
+        Return a LangChain-compatible LLM for the configured backend.
+
+        Usage:
+            llm = settings.get_llm()
+            chain = prompt | llm | StrOutputParser()
+
+        Backends
+        --------
+        ollama       — local Ollama server (default, no API key needed)
+        gemini       — Google Gemini via langchain-google-genai
+        huggingface  — HuggingFace Inference API via langchain-huggingface
+        """
+        backend = self.llm_backend
+
+        if backend == "ollama":
+            from langchain_ollama import OllamaLLM
+            return OllamaLLM(
+                model=self.ollama_model,
+                base_url=self.ollama_base_url,
+            )
+
+        if backend == "gemini":
+            if not self.gemini_api_key:
+                raise ValueError(
+                    "LLM_BACKEND=gemini requires GEMINI_API_KEY to be set."
+                )
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            return ChatGoogleGenerativeAI(
+                model=self.gemini_model,
+                google_api_key=self.gemini_api_key,
+                temperature=0,
+            )
+
+        if backend == "huggingface":
+            if not self.hf_api_token:
+                raise ValueError(
+                    "LLM_BACKEND=huggingface requires HF_API_TOKEN to be set."
+                )
+            from langchain_huggingface import HuggingFaceEndpoint
+            return HuggingFaceEndpoint(
+                repo_id=self.hf_model,
+                huggingfacehub_api_token=self.hf_api_token,
+                temperature=0.1,
+                max_new_tokens=512,
+            )
+
+        raise ValueError(
+            f"Unknown LLM_BACKEND={backend!r}. "
+            "Choose one of: ollama, gemini, huggingface"
+        )

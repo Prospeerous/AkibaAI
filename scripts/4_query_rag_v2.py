@@ -32,7 +32,6 @@ from src.embedding.embedder import EmbeddingEngine
 from src.indexing.faiss_store import FAISSStore
 from src.utils.logging_config import setup_logging
 
-from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
@@ -113,20 +112,24 @@ class FinanceCoachV2:
         if life_stage_filter:
             print(f"  Life-stage filter: {life_stage_filter}")
 
-        # Load Ollama LLM
-        print(f"[2/3] Connecting to Ollama ({self.settings.ollama_model})...")
+        # Load LLM (backend selected by LLM_BACKEND env var)
+        backend = self.settings.llm_backend
+        print(f"[2/3] Loading LLM (backend={backend})...")
         try:
-            self.llm = OllamaLLM(
-                model=self.settings.ollama_model,
-                base_url=self.settings.ollama_base_url,
-                temperature=0,
-            )
-            self.llm.invoke("test")
-            print("  Connected to Ollama")
+            self.llm = self.settings.get_llm()
+            # Quick smoke-test (skip for API-backed models to avoid billing on startup)
+            if backend == "ollama":
+                self.llm.invoke("test")
+            print(f"  LLM ready ({backend})")
         except Exception as e:
-            print(f"\n  Error: Cannot connect to Ollama: {e}")
-            print(f"  1. Install Ollama: https://ollama.com/download")
-            print(f"  2. Run: ollama pull {self.settings.ollama_model}")
+            print(f"\n  Error: Cannot initialise LLM ({backend}): {e}")
+            if backend == "ollama":
+                print(f"  1. Install Ollama: https://ollama.com/download")
+                print(f"  2. Run: ollama pull {self.settings.ollama_model}")
+            elif backend == "gemini":
+                print("  Set GEMINI_API_KEY in your environment or .env file.")
+            elif backend == "huggingface":
+                print("  Set HF_API_TOKEN in your environment or .env file.")
             raise
 
         # Build RAG chain
